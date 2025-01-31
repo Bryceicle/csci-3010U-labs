@@ -84,8 +84,9 @@ class Simulation:
         self.trace_x.append(self.pos[0])
         self.trace_y.append(self.pos[1])
         
-        print("velocity:", self.vel[0], self.vel[1])
-        print("position:", self.pos[0],self.pos[1])
+        if False:
+            print("velocity:", self.vel[0], self.vel[1])
+            print("position:", self.pos[0],self.pos[1])
 
         
     def pause(self):

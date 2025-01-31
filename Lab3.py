@@ -64,32 +64,32 @@ class HeavenlyBody(pygame.sprite.Sprite):
         self.t = 0.0
         
         
-        self.solver = ode(self.f)
-        self.solver.set_integrator('dop853')
+        self.solver = ode(self.f) # set up ode solver
+        self.solver.set_integrator('dop853') # set solver to use RK4
         
-    def f(self, t, state, arg1, arg2):
+    def f(self, t, state, arg1, arg2): # sets up the differential equation to be solved
         
         pos1 = np.array([state[0], state[1]]) #position of self
         pos2 = np.array([self.other_pos[0], self.other_pos[1]]) #position of other
         vel = [state[2], state[3]] #velocity of self
-        d = pos2 - pos1
-        r = np.linalg.norm(d)
+        d = pos2 - pos1 # distance between self and other
+        r = np.linalg.norm(d) # the absolute value of the distance vector
         u = d/r
         
         if self.name == 'earth':
             self.distances.append(r)
         
-        f = u * arg2 * arg1 * self.other_mass / (r*r)
+        f = u * arg2 * arg1 * self.other_mass / (r*r) # calculates the force of gravity for self
         
         if False: # Set this to True to print the following values
             print ('Force on', self.name, ' from', self.other_name, '=', f)
             print ('Mass-1', self.mass, 'mass-2', arg2)
             print ('G', self.G)
             print ('Distance', r)
-            print('Pos', self.pos)
+            print ('Pos', self.pos)
             print ('Vel', self.vel)
         
-        dstate = np.array([vel[0], vel[1], f[0]/arg1, f[1]/arg1])
+        dstate = np.array([vel[0], vel[1], f[0]/arg1, f[1]/arg1]) #returns the diffential equations for change in distance and velocity
         return dstate
 
     def set_pos(self, pos):
@@ -98,7 +98,7 @@ class HeavenlyBody(pygame.sprite.Sprite):
     def set_vel(self, vel):
         self.vel = np.array(vel) 
         
-    def setup(self):
+    def setup(self): #initialize the ode solver function for the body
         
         self.solver.set_f_params(self.mass, self.G)
         self.state = np.array([self.pos[0], self.pos[1],self.vel[0], self.vel[1]])
@@ -114,20 +114,20 @@ class HeavenlyBody(pygame.sprite.Sprite):
                 self.other_mass = other.mass # saving other's pos values to use in integration
                 self.other_name = other.name # saving other's pos values to use in displaying values
                 
-                if self.solver.successful():
+                if self.solver.successful(): # solve the ode to find the change in position and velocity for self
                     self.solver.integrate(self.solver.t + dt)
                 
-                self.state = self.solver.y
-                self.t = self.solver.t
+                self.state = self.solver.y # set state to the updated position and velocty
+                self.t = self.solver.t # update time
                 
-                self.pos[0] = self.state[0]
+                self.pos[0] = self.state[0] # update the postion and velocity values
                 self.pos[1] = self.state[1]
                 self.vel[0] = self.state[2]
                 self.vel[1] = self.state[3]
                 
-    def plot(self): #added a plot function to the heavenly body class, making plotting simplier
+    def plot(self): #added a plot function to the heavenly body class
         
-        plt.figure(1)
+        plt.figure()
         plt.plot(self.distances)
         plt.xlabel('frame')
         plt.ylabel('distance')
@@ -189,7 +189,7 @@ def main():
     moon = HeavenlyBody('moon', Moon_Mass, WHITE, radius=10)
     moon.set_pos([int(Distance), 0])
     moon.set_vel([0, 1000])
-    earth.setup()
+    earth.setup() 
     moon.setup()
 
     universe.add_body(earth)
