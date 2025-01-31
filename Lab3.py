@@ -54,46 +54,87 @@ class HeavenlyBody(pygame.sprite.Sprite):
             pygame.draw.circle(self.image, color, (radius, radius), radius, radius)
 
         self.rect = self.image.get_rect()
-        self.pos = np.array([0,0])
-        self.vel = np.array([0,0])
+        self.pos = [0.0, 0.0]
+        self.vel = [0.0, 0.0]
         self.mass = mass
         self.radius = radius
         self.name = name
         self.G = G
         self.distances = []
+        self.t = 0.0
+        
+        
+        self.solver = ode(self.f)
+        self.solver.set_integrator('dop853')
+        
+    def f(self, t, state, arg1, arg2):
+        
+        pos1 = np.array([state[0], state[1]]) #position of self
+        pos2 = np.array([self.other_pos[0], self.other_pos[1]]) #position of other
+        vel = [state[2], state[3]] #velocity of self
+        d = pos2 - pos1
+        r = np.linalg.norm(d)
+        u = d/r
+        
+        if self.name == 'earth':
+            self.distances.append(r)
+        
+        f = u * arg2 * arg1 * self.other_mass / (r*r)
+        
+        if False: # Set this to True to print the following values
+            print ('Force on', self.name, ' from', self.other_name, '=', f)
+            print ('Mass-1', self.mass, 'mass-2', arg2)
+            print ('G', self.G)
+            print ('Distance', r)
+            print('Pos', self.pos)
+            print ('Vel', self.vel)
+        
+        dstate = np.array([vel[0], vel[1], f[0]/arg1, f[1]/arg1])
+        return dstate
 
     def set_pos(self, pos):
         self.pos = np.array(pos)
 
     def set_vel(self, vel):
-        self.vel = np.array(vel)
+        self.vel = np.array(vel) 
+        
+    def setup(self):
+        
+        self.solver.set_f_params(self.mass, self.G)
+        self.state = np.array([self.pos[0], self.pos[1],self.vel[0], self.vel[1]])
+        self.solver.set_initial_value(self.state, self.t)
 
     def update1(self, objects, dt):
-        force = np.array([0,0])
-        for o in objects:
+        
+        for o in objects: 
             if o != self.name:
                 other = objects[o]
-
-                d = (other.pos - self.pos)
-                r = np.linalg.norm(d)
-                u = d / r
-                f = u * G * self.mass * other.mass / (r*r)
-
-                if False: # Set this to True to print the following values
-                    print ('Force on', self.name, ' from', other.name, '=', f)
-                    print ('Mass-1', self.mass, 'mass-2', other.mass)
-                    print ('G', self.G)
-                    print ('Distance', r)
-                    print ('Vel', self.vel)
-
-                new_vel = self.vel + dt * f / self.mass
-                new_pos = self.pos + dt * self.vel
-                self.vel = new_vel
-                self.pos = new_pos
-
-                if self.name == 'earth':
-                    self.distances.append(r)
-
+                
+                self.other_pos = other.pos # saving other's pos values to use in integration
+                self.other_mass = other.mass # saving other's pos values to use in integration
+                self.other_name = other.name # saving other's pos values to use in displaying values
+                
+                if self.solver.successful():
+                    self.solver.integrate(self.solver.t + dt)
+                
+                self.state = self.solver.y
+                self.t = self.solver.t
+                
+                self.pos[0] = self.state[0]
+                self.pos[1] = self.state[1]
+                self.vel[0] = self.state[2]
+                self.vel[1] = self.state[3]
+                
+    def plot(self): #added a plot function to the heavenly body class, making plotting simplier
+        
+        plt.figure(1)
+        plt.plot(self.distances)
+        plt.xlabel('frame')
+        plt.ylabel('distance')
+        title_str = 'Distance between the ' + self.name + ' and the ' + self.other_name
+        plt.title(title_str)
+        plt.show()
+            
 class Universe:
     def __init__(self):
         self.w, self.h = 2.6*Distance, 2.6*Distance 
@@ -147,7 +188,9 @@ def main():
     earth.set_pos([0, 0])
     moon = HeavenlyBody('moon', Moon_Mass, WHITE, radius=10)
     moon.set_pos([int(Distance), 0])
-    moon.set_vel([0, random.choice([100,10000])])
+    moon.set_vel([0, 1000])
+    earth.setup()
+    moon.setup()
 
     universe.add_body(earth)
     universe.add_body(moon)
@@ -162,9 +205,11 @@ def main():
 
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
+            earth.plot()
             pygame.quit()
             sys.exit(0)
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            earth.plot()
             pygame.quit()
             sys.exit(0)
         else:
@@ -176,15 +221,9 @@ def main():
             universe.draw(screen)
             pygame.display.flip()
         frame += 1
-
+        
+    earth.plot()
     pygame.quit()
-
-    plt.figure(1)
-    plt.plot(earth.distances)
-    plt.xlabel('frame')
-    plt.ylabel('distance')
-    plt.title('Distance between the earth and the moon')
-    plt.show()
 
 
 if __name__ == '__main__':
