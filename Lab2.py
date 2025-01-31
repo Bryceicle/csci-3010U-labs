@@ -42,11 +42,12 @@ class MyCircle(pygame.sprite.Sprite):
 
 class Simulation:
     def __init__(self):
-        self.pos = [0,0]
+        self.pos = np.array([0.0,0.0])
+        self.vel = np.array([0.0,0.0])
         self.gamma = 0.0001
         self.gravity = 9.81
         self.dt = 0.033
-        self.cur_time = 0
+        self.t = 0.0
         
         self.paused = True # starting in paused mode
 
@@ -55,28 +56,36 @@ class Simulation:
         self.solver.set_f_params(self.gamma, self.gravity)
 
     def f(self, t, state, arg1, arg2):
-        return [arg1*state[0], arg1*state[1]+arg2]
+        self.dstate = np.array([state[2],state[3], - arg1* state[2], - arg1 * state[3] - arg2])
+        return self.dstate
 
     def setup(self, speed, angle_degrees):
-        self.vy = np.sin(angle_degrees/180 *np.pi)*speed
-        self.vx = np.cos(angle_degrees/180 *np.pi)*speed
-
+        self.vel[0] = np.cos(angle_degrees/180 *np.pi)*speed
+        self.vel[1] = np.sin(angle_degrees/180 *np.pi)*speed
+        
+        self.state = np.array([self.pos[0], self.pos[1], self.vel[0], self.vel[1]])
+        self.solver.set_initial_value(self.state, self.t)
         
         self.trace_x = [self.pos[0]]
         self.trace_y = [self.pos[1]]
 
     def step(self):
-        self.cur_time += self.dt
-        self.pos[0] += self.vx
-        self.pos[1] += self.vy
-        print("velocity:", self.vx,self.vy)
-        print("position:", self.pos[0],self.pos[1])
+        
+        if self.solver.successful():
+            self.solver.integrate(self.solver.t + self.dt)    
+        
+        self.state = self.solver.y
+        self.t = self.solver.t
+        
+        self.pos[0] = self.state[0]
+        self.pos[1] = self.state[1]
+        self.vel[0] = self.state[2]
+        self.vel[1] = self.state[3]
         self.trace_x.append(self.pos[0])
         self.trace_y.append(self.pos[1])
-        self.state = [self.vx, self.vy]
-        self.solver.set_initial_value(self.state, self.cur_time)
-        self.vx, self.vy = self.solver.integrate(self.dt)
-
+        
+        print("velocity:", self.vel[0], self.vel[1])
+        print("position:", self.pos[0],self.pos[1])
 
         
     def pause(self):
@@ -110,7 +119,7 @@ def main():
 
     # setting up simulation
     sim = Simulation()
-    sim.setup(70., 89.9)
+    sim.setup(70., 50)
 
     print('--------------------------------')
     print('Usage:')
