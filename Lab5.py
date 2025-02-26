@@ -45,7 +45,7 @@ class Ball:
         self.state = [height, 0]
         self.h_init = height
         self.g = 9.8
-        self.dt = 1.0
+        self.dt = 0.033
         self.t = 0
         self.mass = 1
 
@@ -74,6 +74,7 @@ class Ball:
             self.state = new_state
             self.t += self.dt
         else:
+            print(self.state)
             state_after_collision, collision_time = self.respond_to_collision(new_state, self.t+self.dt)
             self.state = state_after_collision
             self.t = collision_time
@@ -84,7 +85,7 @@ ball = Ball(height=100)
 # blit=True - only re-draw the parts that have changed.
 # repeat=False - stops when frame count reaches 999
 # fargs=(ball,) - a tuple that can be used to pass extra arguments to animate function
-anim = animation.FuncAnimation(fig, animate, fargs=(ball,), init_func=init, frames=300, interval=10, blit=True, repeat=False)
+anim = animation.FuncAnimation(fig, animate, fargs=(ball,), init_func=init, frames=3000, interval=10, blit=True, repeat=False)
 #plt.savefig('bouncing-ball-trace', format='png')
 
 # Save the animation as an mp4.  For more information, see
