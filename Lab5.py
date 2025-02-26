@@ -64,7 +64,7 @@ class Ball:
 
     def respond_to_collision(self, state, t):
         vy_col = np.sqrt(2*self.g*self.h_init)
-        return [0+self.tol_distance, -vy_col], t
+        return [0+self.tol_distance, vy_col], t
 
     def update(self):
         new_state = self.solver.integrate(self.t + self.dt)
@@ -72,12 +72,10 @@ class Ball:
         # Collision detection
         if not self.is_collision(new_state):
             self.state = new_state
-            print(self.state)
             self.t += self.dt
         else:
             state_after_collision, collision_time = self.respond_to_collision(new_state, self.t+self.dt)
             self.state = state_after_collision
-            print(self.state)
             self.t = collision_time
             self.solver.set_initial_value(self.state, self.t)
 
