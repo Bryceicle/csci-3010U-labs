@@ -33,9 +33,12 @@ def animate(i, balls):
     time_text.set_text(time_template % balls[0].t)
     times.append(balls[0].t)
     for i in range(len(balls)):
+        lines[0] = [0,balls[i].h_init]
         lines[i] = np.append(lines[i], [balls[i].state[0]], 0)
         balls[i].update()
-        ax.plot(times, lines[i], '-')
+        for j in range(len(lines[i])):
+            ax.plot(times, lines[i][j], '-')
+
 
     return time_text,
 
@@ -83,8 +86,9 @@ class Ball:
 
 ball1 = Ball(height=100)
 ball2 = Ball(height=200)
-balls = [ball1]
-lines = [[]] * len(balls)
+balls = [ball1, ball2]
+lines = [[[0,0]]]* len(balls)
+print(lines)
 times = []
 # blit=True - only re-draw the parts that have changed.
 # repeat=False - stops when frame count reaches 999
