@@ -14,33 +14,27 @@ from scipy.integrate import ode
 fig = plt.figure(1)
 ax = plt.axes(xlim=(0, 300), ylim=(-200, 1000))
 plt.grid()
-#line, = ax.plot([], [], '-')
+line, = ax.plot([], [], '-')
 time_template = 'time = %.1fs'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 plt.title('Ball-Floor-Collision: Height vs. Time')
 plt.xlabel('Time')
 plt.ylabel('Height')
 
-
 # Background for each function
 def init():
-    #line.set_data([], [])
+    line.set_data([], [])
     time_text.set_text('')
-    return time_text,
+    return line, time_text,
 
 # Called at each frame
-def animate(i, balls):
-    time_text.set_text(time_template % balls[0].t)
-    times.append(balls[0].t)
-    for i in range(len(balls)):
-        lines[0] = [0,balls[i].h_init]
-        lines[i] = np.append(lines[i], [balls[i].state[0]], 0)
-        balls[i].update()
-        for j in range(len(lines[i])):
-            ax.plot(times, lines[i][j], '-')
+def animate(i, ball):
+    line.set_xdata(np.append(line.get_xdata(), ball.t))
+    line.set_ydata(np.append(line.get_ydata(), ball.state[0]))
+    time_text.set_text(time_template % ball.t)
 
-
-    return time_text,
+    ball.update()
+    return line, time_text,
 
 # Ball simulation - bouncing ball
 class Ball:
@@ -69,7 +63,7 @@ class Ball:
 
     def respond_to_collision(self, state, t):
         vy_col = np.sqrt(2*self.g*self.h_init)
-        return [0+self.tol_distance, vy_col], t
+        return [self.tol_distance, vy_col], t
 
     def update(self):
         new_state = self.solver.integrate(self.t + self.dt)
@@ -84,16 +78,13 @@ class Ball:
             self.t = collision_time
             self.solver.set_initial_value(self.state, self.t)
 
-ball1 = Ball(height=100)
-ball2 = Ball(height=200)
-balls = [ball1, ball2]
-lines = [[[0,0]]]* len(balls)
-print(lines)
-times = []
+ball = Ball(height=100)
+
+
 # blit=True - only re-draw the parts that have changed.
 # repeat=False - stops when frame count reaches 999
 # fargs=(ball,) - a tuple that can be used to pass extra arguments to animate function
-anim = animation.FuncAnimation(fig, animate, fargs=(balls,), init_func=init, frames=3000, interval=10, blit=True, repeat=False)
+anim = animation.FuncAnimation(fig, animate, fargs=(ball,), init_func=init, frames=1200, interval=10, blit=True, repeat=False)
 #plt.savefig('bouncing-ball-trace', format='png')
 
 # Save the animation as an mp4.  For more information, see
