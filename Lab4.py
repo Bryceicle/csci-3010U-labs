@@ -84,7 +84,7 @@ class SpringMass(pygame.sprite.Sprite):
             spring2Length = np.sqrt((posWeight[0]-posSpring2[0])**2+(posWeight[1]-posSpring2[1])**2)
             deformation2 = spring2Length - arg5
             unitVector2 = spring2/spring2Length
-            fSpring2 = (-arg2 * deformation2 * unitVector2) + fFriction #calculate force of spring 2 inlcuding damping
+            fSpring2 = (-arg2 * deformation2 * unitVector2) + fFriction #calculate force of spring 2 including damping
 
         fGrav = arg1 * (-arg4) #calculate force of gravity
         
