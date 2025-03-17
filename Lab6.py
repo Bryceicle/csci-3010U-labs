@@ -149,11 +149,11 @@ class Box2d(pygame.sprite.Sprite):
         self.image_rot = pygame.transform.rotate(self.image, angle)
 
     def to_screen(self, pos):
-        return [pos[0]/10 + 320, pos[1]/10 + 320]
+        return [pos[0]*10 + 320, pos[1]*10 + 320]
 
     def move(self, x, y):
-        new_x = self.pos[0] + x
-        new_y = self.pos[1] + y
+        new_x = x
+        new_y = y
         self.pos = (new_x, new_y)
 
     def draw(self, surface):
@@ -190,7 +190,6 @@ def main():
 
     rb.solver.set_initial_value(rb.state, cur_time)
 
-    exploded = False
     while True:
         # 30 fps
         clock.tick(30)
